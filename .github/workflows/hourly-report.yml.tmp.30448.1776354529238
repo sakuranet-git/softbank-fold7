@@ -1,0 +1,38 @@
+name: Fold7 1時間ごと定期報告
+
+on:
+  schedule:
+    - cron: '7 * * * *'   # 毎時7分（在庫なしでも必ず報告）
+  workflow_dispatch:
+
+jobs:
+  hourly-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('package.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: 在庫チェック（定期報告）
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ALWAYS_REPORT: 'true'
+        run: node check_stock.js
