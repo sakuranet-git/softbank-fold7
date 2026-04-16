@@ -16,18 +16,22 @@ function log(msg) {
   console.log(`[${ts}] ${msg}`);
 }
 
-function ntfyNotify(title, message, priority = '3', tags = 'white_check_mark') {
+function ntfyNotify(title, message, priority = 3, tags = 'white_check_mark') {
   return new Promise((resolve) => {
-    const body = Buffer.from(message, 'utf8');
+    const payload = JSON.stringify({
+      topic: NTFY_TOPIC,
+      title: title,
+      message: message,
+      priority: priority,
+      tags: tags.split(',')
+    });
+    const body = Buffer.from(payload, 'utf8');
     const req = https.request({
       hostname: 'ntfy.sh',
-      path: '/' + NTFY_TOPIC,
+      path: '/',
       method: 'POST',
       headers: {
-        'X-Title': encodeURIComponent(title),
-        'X-Priority': priority,
-        'X-Tags': tags,
-        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Type': 'application/json',
         'Content-Length': body.length
       }
     }, res => {
