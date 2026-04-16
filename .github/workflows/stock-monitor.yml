@@ -1,0 +1,39 @@
+name: SoftBank Fold7 在庫監視
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # 5分ごと（GitHub Actionsの最小間隔）
+  workflow_dispatch:         # 手動実行も可能
+
+jobs:
+  check-stock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('package.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+
+      - name: 在庫チェック
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: node check_stock.js

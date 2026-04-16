@@ -1,0 +1,12 @@
+{
+  "name": "softbank-fold7-monitor",
+  "version": "1.0.0",
+  "description": "SoftBank Galaxy Z Fold7 在庫監視",
+  "main": "check_stock.js",
+  "scripts": {
+    "check": "node check_stock.js"
+  },
+  "dependencies": {
+    "playwright-chromium": "^1.44.0"
+  }
+}
