@@ -76,25 +76,33 @@ async function checkStock() {
     const stockStatus = {};
     let hasStock = false;
 
-    for (const color of colors) {
-      const idx = bodyText.indexOf(color);
-      if (idx !== -1) {
-        const nearby = bodyText.substring(idx, idx + 50);
-        const inStock = !nearby.includes('在庫なし');
-        stockStatus[color] = inStock ? '在庫あり ✅' : '在庫なし ❌';
-        if (inStock) hasStock = true;
-      }
-    }
+    // ページが正常に読み込めたか確認
+    const pageLoaded = bodyText.includes('在庫あり') || bodyText.includes('在庫なし') ||
+                       bodyText.includes('現在すべてのカラーで在庫がございません');
 
-    const noStockAll = bodyText.includes('現在すべてのカラーで在庫がございません');
-    if (noStockAll) hasStock = false;
+    if (pageLoaded) {
+      for (const color of colors) {
+        const idx = bodyText.indexOf(color);
+        if (idx !== -1) {
+          const nearby = bodyText.substring(idx, idx + 50);
+          // 「在庫あり」テキストが明示的にある場合のみ在庫ありとみなす
+          if (nearby.includes('在庫あり')) {
+            stockStatus[color] = '在庫あり ✅';
+            hasStock = true;
+          } else {
+            stockStatus[color] = '在庫なし ❌';
+          }
+        }
+      }
+      if (bodyText.includes('現在すべてのカラーで在庫がございません')) hasStock = false;
+    }
 
     const ts = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
     const statusStr = Object.entries(stockStatus)
       .map(([c, s]) => `${c}: ${s}`)
-      .join('\n') || '取得失敗';
+      .join('\n') || (pageLoaded ? '取得失敗' : 'ページ読み込み失敗');
 
-    log(`チェック完了 → ${hasStock ? '⚡在庫あり！' : '全色在庫なし'}`);
+    log(`チェック完了 → ${hasStock ? '⚡在庫あり！' : (pageLoaded ? '全色在庫なし' : '⚠️ページ読み込み失敗')}`);
     log(statusStr.replace(/\n/g, ' / '));
 
     if (hasStock) {
