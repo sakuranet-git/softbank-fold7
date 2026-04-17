@@ -7,7 +7,7 @@
 const { chromium } = require('playwright-chromium');
 const https = require('https');
 
-const NTFY_TOPIC = process.env.NTFY_TOPIC || 'softbank-fold7';
+const NTFY_TOPIC = 'softbank-fold7';  // 固定値（Secretに依存しない）
 const ALWAYS_REPORT = process.env.ALWAYS_REPORT === 'true';
 const URL = 'https://online-shop.mb.softbank.jp/sbols/ContractTypePage/?agncyId=sbm&itemType=23&receiptStyleCtrl=1&modelGrpCd=SCSBF1';
 
@@ -37,7 +37,10 @@ function ntfyNotify(title, message, priority = 3, tags = 'white_check_mark') {
     }, res => {
       let data = '';
       res.on('data', d => data += d);
-      res.on('end', () => { log('ntfy通知送信完了 status:' + res.statusCode); resolve(); });
+      res.on('end', () => {
+        log('ntfy通知送信完了 status:' + res.statusCode + (res.statusCode !== 200 ? ' body:' + data : ''));
+        resolve();
+      });
     });
     req.on('error', e => { log('ntfy通知エラー: ' + e.message); resolve(); });
     req.write(body);
