@@ -22,7 +22,7 @@ function ntfyNotify(title, message, priority = 3, tags = 'white_check_mark') {
       topic: NTFY_TOPIC,
       title: title,
       message: message,
-      priority: parseInt(priority) || 3,
+      priority: priority,
       tags: tags.split(',')
     });
     const body = Buffer.from(payload, 'utf8');
